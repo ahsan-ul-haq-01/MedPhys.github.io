@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Central Axis Dosimetric Parameters</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #2c3e50, #34495e);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            margin: 0;
+            font-size: 3em;
+            font-weight: 300;
+            letter-spacing: 2px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .header p {
+            margin: 15px 0 0 0;
+            font-size: 1.4em;
+            opacity: 0.9;
+        }
+        
+        .content {
+            padding: 40px;
+        }
+        
+        .parameter-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+            margin: 40px 0;
+        }
+        
+        .parameter-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            overflow: hidden;
+            transition: all 0.3s ease;
+            border: 3px solid transparent;
+        }
+        
+        .parameter-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+        }
+        
+        .card-header {
+            padding: 25px;
+            color: white;
+            font-weight: 600;
+            font-size: 1.4em;
+            text-align: center;
+        }
+        
+        .pdd-card .card-header { background: linear-gradient(135deg, #74b9ff, #0984e3); }
+        .tpr-card .card-header { background: linear-gradient(135deg, #fd79a8, #e84393); }
+        .tmr-card .card-header { background: linear-gradient(135deg, #00b894, #00a085); }
+        .tar-card .card-header { background: linear-gradient(135deg, #fdcb6e, #e17055); }
+        .sar-card .card-header { background: linear-gradient(135deg, #a29bfe, #6c5ce7); }
+        .spr-card .card-header { background: linear-gradient(135deg, #fd79a8, #e84393); }
+        
+        .card-body {
+            padding: 30px;
+        }
+        
+        .formula-box {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border-left: 4px solid #3498db;
+            font-family: 'Times New Roman', serif;
+            font-size: 1.2em;
+            text-align: center;
+        }
+        
+        .characteristics-list {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .characteristics-list li {
+            padding: 10px 0;
+            position: relative;
+            padding-left: 30px;
+            border-bottom: 1px solid #ecf0f1;
+        }
+        
+        .characteristics-list li::before {
+            content: '▶';
+            position: absolute;
+            left: 0;
+            color: #3498db;
+            font-size: 1.2em;
+        }
+        
+        .characteristics-list li:last-child {
+            border-bottom: none;
+        }
+        
+        .graph-container {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 40px;
+            margin: 40px 0;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+        
+        .graph-title {
+            color: #2c3e50;
+            font-size: 1.8em;
+            font-weight: 600;
+            margin: 0 0 30px 0;
+            text-align: center;
+        }
+        
+        .svg-container {
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        }
+        
+        .interactive-controls {
+            text-align: center;
+            margin: 30px 0;
+        }
+        
+        .control-button {
+            background: linear-gradient(135deg, #6c5ce7, #5f3dc4);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            margin: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: all 0.3s ease;
+        }
+        
+        .control-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 30px 0;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .comparison-table th {
+            background: linear-gradient(135deg, #2c3e50, #34495e);
+            color: white;
+            padding: 20px 15px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 1.1em;
+        }
+        
+        .comparison-table td {
+            padding: 18px 15px;
+            border-bottom: 1px solid #ecf0f1;
+            transition: background-color 0.3s ease;
+        }
+        
+        .comparison-table tr:hover td {
+            background-color: #f8f9fa;
+        }
+        
+        .comparison-table tr:nth-child(even) td {
+            background-color: #fafbfc;
+        }
+        
+        .clinical-applications {
+            background: linear-gradient(135deg, #00b894, #00a085);
+            color: white;
+            padding: 40px;
+            border-radius: 15px;
+            margin: 40px 0;
+        }
+        
+        .clinical-applications h2 {
+            margin-top: 0;
+            font-size: 2em;
+            text-align: center;
+        }
+        
+        .applications-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+        }
+        
+        .application-item {
+            background: rgba(255,255,255,0.1);
+            padding: 25px;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .measurement-details {
+            background: #ecf0f1;
+            padding: 40px;
+            border-radius: 15px;
+            margin: 40px 0;
+        }
+        
+        .measurement-details h2 {
+            color: #2c3e50;
+            margin-top: 0;
+            text-align: center;
+            font-size: 2em;
+        }
+        
+        @media (max-width: 768px) {
+            .parameter-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .content {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Central Axis Dosimetric Parameters</h1>
+            <p>Fundamental Radiation Dosimetry Measurements & Analysis</p>
+        </div>
+        
+        <div class="content">
+            <!-- Parameter Cards Grid -->
+            <div class="parameter-grid">
+                <!-- PDD Card -->
+                <div class="parameter-card pdd-card">
+                    <div class="card-header">
+                        Percentage Depth Dose (PDD)
+                    </div>
+                    <div class="card-body">
+                        <div class="formula-box">
+                            PDD(d) = [D(d) / D(d<sub>max</sub>)] × 100%
+                        </div>
+                        <ul class="characteristics-list">
+                            <li><strong>Definition:</strong> Dose at depth d relative to dose at maximum buildup depth</li>
+                            <li><strong>Reference:</strong> Normalized to d<sub>max</sub> (100%)</li>
+                            <li><strong>SSD Dependence:</strong> Varies with source-surface distance</li>
+                            <li><strong>Energy Dependence:</strong> Higher energy = deeper penetration</li>
+                            <li><strong>Field Size Effect:</strong> Larger fields show less dose falloff</li>
+                            <li><strong>Applications:</strong> Manual calculations, isodose planning</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <!-- TPR Card -->
+                <div class="parameter-card tpr-card">
+                    <div class="card-header">
+                        Tissue Phantom Ratio (TPR)
+                    </div>
+                    <div class="card-body">
+                        <div class="formula-box">
+                            TPR(d,r<sub>d</sub>) = D(d,r<sub>d</sub>) / D(d<sub>ref</sub>,r<sub>d</sub>)
+                        </div>
+                        <ul class="characteristics-list">
+                            <li><strong>Definition:</strong> Dose ratio at two depths with same field size at depth</li>
+                            <li><strong>SSD Independent:</strong> Eliminates inverse square law effects</li>
+                            <li><strong>Reference Depth:</strong> Usually 10 cm or 5 cm water</li>
+                            <li><strong>Field Size:</strong> Defined at measurement depth (r<sub>d</sub>)</li>
+                            <li><strong>Stability:</strong> Independent of distance variations</li>
+                            <li><strong>Modern Use:</strong> Preferred for treatment planning systems</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <!-- TMR Card -->
+                <div class="parameter-card tmr-card">
+                    <div class="card-header">
+                        Tissue Maximum Ratio (TMR)
+                    </div>
+                    <div class="card-body">
+                        <div class="formula-box">
+                            TMR(d,r<sub>d</sub>) = D(d,r<sub>d</sub>) / D(d<sub>max</sub>,r<sub>d</sub>)
+                        </div>
+                        <ul class="characteristics-list">
+                            <li><strong>Definition:</strong> Dose at depth d relative to dose at d<sub>max</sub></li>
+                            <li><strong>Reference Point:</strong> Always normalized to d<sub>max</sub></li>
+                            <li><strong>Phantom Measurement:</strong> Requires full scattering conditions</li>
+                            <li><strong>Field Definition:</strong> Field size at measurement depth</li>
+                            <li><strong>Geometric Independence:</strong> No SSD dependence</li>
+                            <li><strong>Clinical Use:</strong> Isocentric treatment planning</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <!-- TAR Card -->
+                <div class="parameter-card tar-card">
+                    <div class="card-header">
+                        Tissue Air Ratio (TAR)
+                    </div>
+                    <div class="card-body">
+                        <div class="formula-box">
+                            TAR(d,r<sub>d</sub>) = D<sub>tissue</sub>(d,r<sub>d</sub>) / D<sub>air</sub>(d,r<sub>d</sub>)
+                        </div>
+                        <ul class="characteristics-list">
+                            <li><strong>Definition:</strong> Dose in tissue relative to dose in air at same point</li>
+                            <li><strong>Measurement:</strong> Tissue vs. air comparison</li>
+                            <li><strong>Physical Meaning:</strong> Accounts for attenuation and scatter</li>
+                            <li><strong>Distance Independence:</strong> No inverse square dependence</li>
+                            <li><strong>Field Size:</strong> Defined at measurement point</li>
+                            <li><strong>Historical Use:</strong> Fundamental dosimetric concept</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <!-- SAR Card -->
+                <div class="parameter-card sar-card">
+                    <div class="card-header">
+                        Scatter Air Ratio (SAR)
+                    </div>
+                    <div class="card-body">
+                        <div class="formula-box">
+                            SAR(d,r<sub>d</sub>) = TAR(d,r<sub>d</sub>) - TAR(d,0)
+                        </div>
+                        <ul class="characteristics-list">
+                            <li><strong>Definition:</strong> Scattered radiation component only</li>
+                            <li><strong>Derivation:</strong> TAR minus primary beam component</li>
+                            <li><strong>Physical Meaning:</strong> Pure scatter contribution</li>
+                            <li><strong>Field Size Dependence:</strong> Increases with field size</li>
+                            <li><strong>Clarkson Method:</strong> Fundamental for irregular field calculations</li>
+                            <li><strong>Planning Use:</strong> Scatter dose modeling</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <!-- SPR Card -->
+                <div class="parameter-card spr-card">
+                    <div class="card-header">
+                        Scatter Phantom Ratio (SPR)
+                    </div>
+                    <div class="card-body">
+                        <div class="formula-box">
+                            SPR(d,r<sub>d</sub>) = S<sub>c</sub>(r<sub>d</sub>) × TMR(d,r<sub>d</sub>)
+                        </div>
+                        <ul class="characteristics-list">
+                            <li><strong>Definition:</strong> Combines collimator and phantom scatter</li>
+                            <li><strong>Components:</strong> Collimator scatter × tissue scatter</li>
+                            <li><strong>Practical Use:</strong> Modern treatment planning systems</li>
+                            <li><strong>Separation:</strong> Isolates different scatter sources</li>
+                            <li><strong>Measurement:</strong> Often derived from other parameters</li>
+                            <li><strong>Accuracy:</strong> More precise for complex calculations</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Interactive Graph Section -->
+            <div class="graph-container">
+                <h2 class="graph-title">Interactive Dosimetric Curves</h2>
+                
+                <div class="interactive-controls">
+                    <button class="control-button" onclick="showCurve('pdd')">Show PDD Curves</button>
+                    <button class="control-button" onclick="showCurve('tpr')">Show TPR Curves</button>
+                    <button class="control-button" onclick="showCurve('tmr')">Show TMR Curves</button>
+                    <button class="control-button" onclick="showCurve('all')">Show All Parameters</button>
+                </div>
+                
+                <div class="svg-container">
+                    <svg id="dosimetric-graph" viewBox="0 0 800 500" style="width: 100%; height: auto;">
+                        <!-- Grid background -->
+                        <defs>
+                            <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+                                <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#e0e0e0" stroke-width="1"/>
+                            </pattern>
+                            <pattern id="minorGrid" width="10" height="10" patternUnits="userSpaceOnUse">
+                                <path d="M 10 0 L 0 0 0 10" fill="none" stroke="#f0f0f0" stroke-width="0.5"/>
+                            </pattern>
+                        </defs>
+                        
+                        <rect width="800" height="500" fill="white"/>
+                        <rect width="800" height="500" fill="url(#minorGrid)"/>
+                        <rect width="800" height="500" fill="url(#grid)"/>
+                        
+                        <!-- Axes -->
+                        <line x1="80" y1="420" x2="720" y2="420" stroke="#2c3e50" stroke-width="3"/>
+                        <line x1="80" y1="420" x2="80" y2="60" stroke="#2c3e50" stroke-width="3"/>
+                        
+                        <!-- Axis labels -->
+                        <text x="400" y="460" text-anchor="middle" fill="#2c3e50" font-size="16" font-weight="bold">Depth in Water (cm)</text>
+                        <text x="40" y="240" text-anchor="middle" fill="#2c3e50" font-size="16" font-weight="bold" transform="rotate(-90 40 240)">Relative Dose (%)</text>
+                        
+                        <!-- Depth scale -->
+                        <g id="depth-scale">
+                            <text x="80" y="440" text-anchor="middle" fill="#7f8c8d" font-size="12">0</text>
+                            <text x="208" y="440" text-anchor="middle" fill="#7f8c8d" font-size="12">5</text>
+                            <text x="336" y="440" text-anchor="middle" fill="#7f8c8d" font-size="12">10</text>
+                            <text x="464" y="440" text-anchor="middle" fill="#7f8c8d" font-size="12">15</text>
+                            <text x="592" y="440" text-anchor="middle" fill="#7f8c8d" font-size="12">20</text>
+                            <text x="720" y="440" text-anchor="middle" fill="#7f8c8d" font-size="12">25</text>
+                        </g>
+                        
+                        <!-- Dose scale -->
+                        <g id="dose-scale">
+                            <text x="70" y="425" text-anchor="end" fill="#7f8c8d" font-size="12">0</text>
+                            <text x="70" y="348" text-anchor="end" fill="#7f8c8d" font-size="12">20</text>
+                            <text x="70" y="276" text-anchor="end" fill="#7f8c8d" font-size="12">40</text>
+                            <text x="70" y="204" text-anchor="end" fill="#7f8c8d" font-size="12">60</text>
+                            <text x="70" y="132" text-anchor="end" fill="#7f8c8d" font-size="12">80</text>
+                            <text x="70" y="60" text-anchor="end" fill="#7f8c8d" font-size="12">100</text>
+                        </g>
+                        
+                        <!-- PDD Curves -->
+                        <g id="pdd-curves" style="opacity: 0;">
+                            <!-- 6 MV curve -->
+                            <path d="M 80 350 L 106 150 L 132 160 L 158 175 L 184 195 L 210 220 L 236 245 L 262 270 L 288 295 L 314 320 L 340 340 L 366 360 L 392 375 L 418 390 L 444 400 L 470 410 L 496 415 L 522 420 L 548 422 L 574 424 L 600 425 L 626 426 L 652 427 L 678 428 L 704 429 L 720 430"
+                                  fill="none" stroke="#e74c3c" stroke-width="4"/>
+                            <text x="500" y="400" fill="#e74c3c" font-size="14" font-weight="bold">6 MV PDD</text>
+                            
+                            <!-- 18 MV curve -->
+                            <path d="M 80 370 L 106 200 L 132 170 L 158 180 L 184 190 L 210 205 L 236 225 L 262 245 L 288 265 L 314 285 L 340 305 L 366 325 L 392 340 L 418 355 L 444 370 L 470 380 L 496 390 L 522 398 L 548 405 L 574 410 L 600 414 L 626 417 L 652 419 L 678 421 L 704 422 L 720 423"
+                                  fill="none" stroke="#3498db" stroke-width="4"/>
+                            <text x="550" y="390" fill="#3498db" font-size="14" font-weight="bold">18 MV PDD</text>
+                        </g>
+                        
+                        <!-- TPR Curves -->
+                        <g id="tpr-curves" style="opacity: 0;">
+                            <!-- TPR 20,10 -->
+                            <path d="M 80 140 L 720 380"
+                                  fill="none" stroke="#9b59b6" stroke-width="4"/>
+                            <text x="450" y="350" fill="#9b59b6" font-size="14" font-weight="bold">TPR(20,10)</text>
+                        </g>
+                        
+                        <!-- TMR Curves -->
+                        <g id="tmr-curves" style="opacity: 0;">
+                            <!-- TMR curve -->
+                            <path d="M 80 140 L 106 145 L 132 152 L 158 162 L 184 175 L 210 192 L 236 212 L 262 235 L 288 260 L 314 285 L 340 310 L 366 335 L 392 355 L 418 375 L 444 390 L 470 405 L 496 415 L 522 422 L 548 428 L 574 432 L 600 435 L 626 437 L 652 439 L 678 440 L 704 441 L 720 442"
+                                  fill="none" stroke="#f39c12" stroke-width="4"/>
+                            <text x="450" y="380" fill="#f39c12" font-size="14" font-weight="bold">TMR</text>
+                        </g>
+                        
+                        <!-- Legend -->
+                        <g id="legend" transform="translate(550, 80)">
+                            <rect x="0" y="0" width="180" height="120" fill="rgba(255,255,255,0.95)" stroke="#bdc3c7" stroke-width="1" rx="8"/>
+                            <text x="90" y="20" text-anchor="middle" fill="#2c3e50" font-size="14" font-weight="bold">Legend</text>
+                            
+                            <line x1="15" y1="35" x2="35" y2="35" stroke="#e74c3c" stroke-width="3"/>
+                            <text x="45" y="40" fill="#2c3e50" font-size="12">6 MV Photons</text>
+                            
+                            <line x1="15" y1="55" x2="35" y2="55" stroke="#3498db" stroke-width="3"/>
+                            <text x="45" y="60" fill="#2c3e50" font-size="12">18 MV Photons</text>
+                            
+                            <line x1="15" y1="75" x2="35" y2="75" stroke="#9b59b6" stroke-width="3"/>
+                            <text x="45" y="80" fill="#2c3e50" font-size="12">TPR Function</text>
+                            
+                            <line x1="15" y1="95" x2="35" y2="95" stroke="#f39c12" stroke-width="3"/>
+                            <text x="45" y="100" fill="#2c3e50" font-size="12">TMR Function</text>
+                        </g>
+                        
+                        <!-- Buildup region indicator -->
+                        <g id="buildup-region">
+                            <rect x="80" y="60" width="52" height="360" fill="rgba(52, 152, 219, 0.1)" stroke="#3498db" stroke-width="2" stroke-dasharray="5,5"/>
+                            <text x="106" y="45" text-anchor="middle" fill="#3498db" font-size="12" font-weight="bold">Buildup Region</text>
+                        </g>
+                    </svg>
+                </div>
+            </div>
+            
+            <!-- Comprehensive Comparison Table -->
+            <div class="comparison-table">
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th>Parameter</th>
+                            <th>Mathematical Definition</th>
+                            <th>Key Characteristics</th>
+                            <th>Clinical Applications</th>
+                            <th>Advantages</th>
+                            <th>Limitations</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>PDD</strong></td>
+                            <td>PDD(d) = [D(d)/D(d<sub>max</sub>)] × 100%</td>
+                            <td>SSD dependent, normalized to d<sub>max</sub></td>
+                            <td>Manual calculations, basic planning</td>
+                            <td>Simple measurement, widely tabulated</td>
+                            <td>SSD dependence, distance corrections needed</td>
+                        </tr>
+                        <tr>
+                            <td><strong>TPR</strong></td>
+                            <td>TPR(d,rd) = D(d,rd)/D(dref,rd)</td>
+                            <td>SSD independent, field at depth</td>
+                            <td>Modern TPS, isocentric techniques</td>
+                            <td>Distance independent, accurate</td>
+                            <td>Requires phantom measurements</td>
+                        </tr>
+                        <tr>
+                            <td><strong>TMR</strong></td>
+                            <td>TMR(d,rd) = D(d,rd)/D(dmax,rd)</td>
+                            <td>Normalized to dmax, phantom based</td>
+                            <td>Isocentric planning, dose algorithms</td>
+                            <td>Geometric independence, physical meaning</td>
+                            <td>Complex measurement setup</td>
+                        </tr>
+                        <tr>
+                            <td><strong>TAR</strong></td>
+                            <td>TAR(d,rd) = Dtissue/Dair</td>
+                            <td>Tissue vs air comparison</td>
+                            <td>Fundamental dosimetry, algorithm basis</td>
+                            <td>Physical interpretation clear</td>
+                            <td>Difficult direct measurement</td>
+                        </tr>
+                        <tr>
+                            <td><strong>SAR</strong></td>
+                            <td>SAR(d,rd) = TAR(d,rd) - TAR(d,0)</td>
+                            <td>Pure scatter component</td>
+                            <td>Clarkson method, scatter modeling</td>
+                            <td>Isolates scatter effects</td>
+                            <td>Derived parameter, measurement errors</td>
+                        </tr>
+                        <tr>
+                            <td><strong>SPR</strong></td>
+                            <td>SPR(d,rd) = Sc(rd) × TMR(d,rd)</td>
+                            <td>Separates collimator and phantom scatter</td>
+                            <td>Advanced algorithms, QA verification</td>
+                            <td>Component separation, accuracy</td>
+                            <td>Complex derivation process</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Measurement Details -->
+            <div class="measurement-details">
+                <h2>Measurement Methodologies & Setup Requirements</h2>
+                
+                <div class="parameter-grid">
+                    <div style="background: white; padding: 30px; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.1);">
+                        <h3 style="color: #9b59b6; margin-top: 0;">TPR/TMR Measurements</h3>
+                        <ul class="characteristics-list">
+                            <li><strong>Setup:</strong> Isocentric geometry (SAD = 100 cm)</li>
+                            <li><strong>Phantom:</strong> Large water phantom (minimum 40×40×40 cm)</li>
+                            <li><strong>Detector:</strong> Small volume ion chamber preferred</li>
+                            <li><strong>Reference:</strong> TPR uses 10 cm depth, TMR uses dmax</li>
+                            <li><strong>Field Definition:</strong> At measurement depth, not at surface</li>
+                            <li><strong>Scatter Conditions:</strong> Full lateral electronic equilibrium</li>
+                        </ul>
+                    </div>
+                    
+                    <div style="background: white; padding: 30px; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.1);">
+                        <h3 style="color: #f39c12; margin-top: 0;">TAR/SAR Derivation</h3>
+                        <ul class="characteristics-list">
+                            <li><strong>Method:</strong> Usually derived from TPR/TMR data</li>
+                            <li><strong>Air Measurement:</strong> Small field, minimal scatter</li>
+                            <li><strong>Tissue Measurement:</strong> Full scatter conditions</li>
+                            <li><strong>SAR Calculation:</strong> TAR minus primary component</li>
+                            <li><strong>Validation:</strong> Independent scatter measurements</li>
+                            <li><strong>Quality Check:</strong> Energy independence verification</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Clinical Applications -->
+            <div class="clinical-applications">
+                <h2>Clinical Applications & Modern Usage</h2>
+                
+                <div class="applications-grid">
+                    <div class="application-item">
+                        <h3>Treatment Planning Systems</h3>
+                        <p><strong>TMR/TPR:</strong> Primary data for dose calculation algorithms including pencil beam, collapsed cone, and Monte Carlo methods. Modern TPS use these parameters for accurate dose modeling in heterogeneous media.</p>
+                    </div>
+                    
+                    <div class="application-item">
+                        <h3>Manual Dose Calculations</h3>
+                        <p><strong>PDD/TAR:</strong> Historical importance for hand calculations and independent dose verification. Still used for quick estimates and educational purposes in medical physics training.</p>
+                    </div>
+                    
+                    <div class="application-item">
+                        <h3>Quality Assurance</h3>
+                        <p><strong>All Parameters:</strong> Essential for commissioning new equipment, verifying dose calculation accuracy, and performing periodic QA checks on treatment planning systems.</p>
+                    </div>
+                    
+                    <div class="application-item">
+                        <h3>Algorithm Development</h3>
+                        <p><strong>SAR/SPR:</strong> Fundamental for developing new dose calculation algorithms, particularly for irregular field calculations and scatter modeling in modern treatment techniques.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Energy Dependence Analysis -->
+            <div class="measurement-details">
+                <h2>Energy Dependence & Physical Factors</h2>
+                
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th>Energy Effect</th>
+                            <th>Low Energy (6 MV)</th>
+                            <th>High Energy (18+ MV)</th>
+                            <th>Clinical Implications</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Buildup Region</strong></td>
+                            <td>dmax = 1.5 cm</td>
+                            <td>dmax = 3.0+ cm</td>
+                            <td>Skin sparing increases with energy</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Penetration</strong></td>
+                            <td>Rapid dose falloff</td>
+                            <td>Better depth penetration</td>
+                            <td>High energy better for deep tumors</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Scatter Component</strong></td>
+                            <td>Higher relative scatter</td>
+                            <td>Lower relative scatter</td>
+                            <td>Affects field size dependence</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Bone Interaction</strong></td>
+                            <td>Significant photoelectric</td>
+                            <td>Predominantly Compton</td>
+                            <td>Energy selection based on anatomy</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Neutron Production</strong></td>
+                            <td>None</td>
+                            <td>Present above 10 MV</td>
+                            <td>Shielding and safety considerations</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Field Size Dependence -->
+            <div class="measurement-details">
+                <h2>Field Size Dependence Analysis</h2>
+                
+                <div class="parameter-grid">
+                    <div style="background: linear-gradient(135deg, #74b9ff, #0984e3); color: white; padding: 30px; border-radius: 15px;">
+                        <h3 style="margin-top: 0;">Small Field Effects</h3>
+                        <ul style="list-style: none; padding: 0;">
+                            <li style="padding: 8px 0;">📏 <strong>Field Size < 3×3 cm:</strong></li>
+                            <li style="padding: 8px 0; padding-left: 20px;">• Lateral electronic disequilibrium</li>
+                            <li style="padding: 8px 0; padding-left: 20px;">• Detector volume averaging effects</li>
+                            <li style="padding: 8px 0; padding-left: 20px;">• Source occlusion by collimators</li>
+                            <li style="padding: 8px 0; padding-left: 20px;">• Requires specialized detectors</li>
+                        </ul>
+                    </div>
+                    
+                    <div style="background: linear-gradient(135deg, #00b894, #00a085); color: white; padding: 30px; border-radius: 15px;">
+                        <h3 style="margin-top: 0;">Large Field Effects</h3>
+                        <ul style="list-style: none; padding: 0;">
+                            <li style="padding: 8px 0;">📐 <strong>Field Size > 20×20 cm:</strong></li>
+                            <li style="padding: 8px 0; padding-left: 20px;">• Maximum scatter contribution</li>
+                            <li style="padding: 8px 0; padding-left: 20px;">• Flattening filter effects</li>
+                            <li style="padding: 8px 0; padding-left: 20px;">• Collimator scatter saturation</li>
+                            <li style="padding: 8px 0; padding-left: 20px;">• Head scatter considerations</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Practical Considerations -->
+            <div class="clinical-applications">
+                <h2>Practical Measurement Considerations</h2>
+                
+                <div class="applications-grid">
+                    <div class="application-item">
+                        <h3>Detector Selection</h3>
+                        <p><strong>Ion Chambers:</strong> Gold standard for absolute dosimetry, energy independence, excellent for reference conditions.<br>
+                        <strong>Diodes:</strong> High spatial resolution, real-time readout, energy dependent.<br>
+                        <strong>Diamond Detectors:</strong> Radiation hard, small volume, minimal energy dependence.</p>
+                    </div>
+                    
+                    <div class="application-item">
+                        <h3>Measurement Uncertainties</h3>
+                        <p><strong>Statistical:</strong> ±0.5-1% for ion chamber measurements<br>
+                        <strong>Systematic:</strong> ±1-2% including setup, calibration<br>
+                        <strong>Total Uncertainty:</strong> ±1.5-2.5% for clinical measurements<br>
+                        <strong>Quality Control:</strong> Regular calibration and intercomparison required</p>
+                    </div>
+                    
+                    <div class="application-item">
+                        <h3>Modern Automation</h3>
+                        <p><strong>Water Scanning Systems:</strong> Automated 3D dose measurement<br>
+                        <strong>Real-time Analysis:</strong> Immediate data processing and QA<br>
+                        <strong>Integration:</strong> Direct TPS data import and validation<br>
+                        <strong>Efficiency:</strong> Reduced measurement time and human error</p>
+                    </div>
+                    
+                    <div class="application-item">
+                        <h3>Special Considerations</h3>
+                        <p><strong>Temperature/Pressure:</strong> Corrections for ion chamber measurements<br>
+                        <strong>Phantom Material:</strong> Water equivalent materials verification<br>
+                        <strong>Beam Quality:</strong> Regular TPR20,10 measurements<br>
+                        <strong>Setup Geometry:</strong> Precise mechanical alignment critical</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        function showCurve(curveType) {
+            // Hide all curves
+            const curves = ['pdd-curves', 'tpr-curves', 'tmr-curves'];
+            curves.forEach(curve => {
+                document.getElementById(curve).style.opacity = '0';
+            });
+            
+            // Show selected curve(s)
+            if (curveType === 'all') {
+                curves.forEach(curve => {
+                    document.getElementById(curve).style.opacity = '1';
+                });
+            } else {
+                document.getElementById(curveType + '-curves').style.opacity = '1';
+            }
+            
+            // Add animation effect
+            setTimeout(() => {
+                const activeCurves = document.querySelectorAll('[style*="opacity: 1"]');
+                activeCurves.forEach(curve => {
+                    curve.style.transition = 'opacity 0.5s ease-in-out';
+                });
+            }, 100);
+        }
+        
+        // Initialize with PDD curves visible
+        document.addEventListener('DOMContentLoaded', function() {
+            showCurve('pdd');
+        });
+        
+        // Add hover effects to parameter cards
+        document.addEventListener('DOMContentLoaded', function() {
+            const cards = document.querySelectorAll('.parameter-card');
+            cards.forEach(card => {
+                card.addEventListener('mouseenter', function() {
+                    this.style.borderColor = '#3498db';
+                });
+                
+                card.addEventListener('mouseleave', function() {
+                    this.style.borderColor = 'transparent';
+                });
+            });
+        });
+    </script>
+</body>
+</html> style="color: #e74c3c; margin-top: 0;">PDD Measurements</h3>
+                        <ul class="characteristics-list">
+                            <li><strong>Setup:</strong> Fixed SSD geometry (usually 100 cm)</li>
+                            <li><strong>Phantom:</strong> Water tank or solid water equivalent</li>
+                            <li><strong>Detector:</strong> Ion chamber, diode, or film</li>
+                            <li><strong>Field Sizes:</strong> Multiple sizes (5×5 to 40×40 cm)</li>
+                            <li><strong>Depths:</strong> Surface to 35+ cm at 0.5-1 cm intervals</li>
+                            <li><strong>Normalization:</strong> To dose at dmax depth</li>
+                        </ul>
+                    </div>
+                    
+                    <div style="background: white; padding: 30px; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.1);">
+                        <h3
